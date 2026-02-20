@@ -1,4 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
+
+import {urlConfig} from '../../config';
+import { useAppContext } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 import './LoginPage.css';
 
@@ -7,29 +11,76 @@ function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    // insertar código aquí para crear la función handleLogin e incluir console.log
-    const handleLogin = async () => {
-        console.log("Inside handleLogin")
+    const [incorrect, setIncorrect] = useState('');
+
+    const navigate = useNavigate();
+    const bearerToken = sessionStorage.getItem('bearer-token');
+    const { setIsLoggedIn } = useAppContext();
+
+    useEffect(() => {
+        if (sessionStorage.getItem('auth-token')) {
+          navigate('/app')
+        }
+    }, [navigate])
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        //api call
+        const res = await fetch(`${urlConfig.backendUrl}/api/auth/login`, {
+            //Step 1 - Task 7
+            method: 'POST',
+            //Step 1 - Task 8
+          headers: {
+            'content-type': 'application/json',
+            'Authorization': bearerToken ? `Bearer ${bearerToken}` : '', // Include Bearer token if available
+          },
+        //Step 1 - Task 9
+          body: JSON.stringify({
+            email: email,
+            password: password,
+          })
+        });
+        //Step 2: Task 1
+        const json = await res.json();
+        console.log('Json',json);
+        if (json.authtoken) {
+            //Step 2: Task 2
+          sessionStorage.setItem('auth-token', json.authtoken);
+          sessionStorage.setItem('name', json.userName);
+          sessionStorage.setItem('email', json.userEmail);
+            //Step 2: Task 3
+          setIsLoggedIn(true);
+            //Step 2: Task 4
+          navigate('/app');
+        } else {
+            //Step 2: Task 5
+          document.getElementById("email").value="";
+          document.getElementById("password").value="";
+          setIncorrect("Wrong password. Try again.");
+          setTimeout(() => {
+            setIncorrect("");
+          }, 2000);
+        }
     }
     return (
       <div className="container mt-5">
         <div className="row justify-content-center">
           <div className="col-md-6 col-lg-4">
             <div className="login-card p-4 border rounded">
-              <h2 className="text-center mb-4 font-weight-bold">Iniciar Sesión</h2>
+              <h2 className="text-center mb-4 font-weight-bold">Login</h2>
           {/* insertar código aquí para crear elementos de entrada para las variables email y contraseña */}
                 <div className="mb-4">
                     <label htmlFor="email" className="form label"> Email</label><br />
-                    <input id="email" type="text" className="form-control" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                    <input id="email" type="text" className="form-control" placeholder="Enter your email" value={email} onChange={(e) => {setEmail(e.target.value); setIncorrect("")}} />
                 </div>
                 <div className="mb-4">
-                    <label htmlFor="password" className="form label"> FirstName</label><br />
-                    <input id="password" type="text" className="form-control" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                    <label htmlFor="password" className="form label"> Password</label><br />
+                    <input id="password" type="text" className="form-control" placeholder="Enter your password" value={password} onChange={(e) => {setPassword(e.target.value);setIncorrect("")}} />
+                    <span style={{color:'red',height:'.5cm',display:'block',fontStyle:'italic',fontSize:'12px'}}>{incorrect}</span>
                 </div>
           {/* insertar código aquí para crear un botón que realice la función `handleLogin` al hacer clic */}
                 <button className="btn btn-primary w-100 mb-3" onClick={handleLogin}>Login</button>
                 <p className="mt-4 text-center">
-                    ¿Nuevo aquí? <a href="/app/register" className="text-primary">Regístrate aquí</a>
+                    New here? <a href="/app/register" className="text-primary">Register here</a>
                 </p>
             </div>
           </div>
