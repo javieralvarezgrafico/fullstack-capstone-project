@@ -1,3 +1,4 @@
+/*jshint esversion: 8 */
 const express = require('express');
 const router = express.Router();
 const connectToDatabase = require('../models/db');
@@ -19,8 +20,8 @@ router.get('/', async (req, res, next) => {
         // Task 4: return the gifts using the res.json method
         res.json(gifts);
     } catch (e) {
-        // logger.console.error('oops something went wrong', e) DARÍA ERROR CON PINO
-        logger.error(e, 'oops something went wrong')
+        // logger.console.error('oops something went wrong', e); DARÍA ERROR CON PINO
+        logger.error(e, 'oops something went wrong');
         next(e);
     }
 });
